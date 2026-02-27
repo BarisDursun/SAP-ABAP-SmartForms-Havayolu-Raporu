@@ -1,0 +1,56 @@
+REPORT Z_9124_DRIVER_PRG.
+
+DATA: gv_fm_name TYPE RS38L_FNAM,   "dosyadan func name alma
+      gs_controls TYPE SSFCTRLOP,
+      gs_output_options TYPE SSFCOMPOP.
+DATA: gt_scarr TYPE TABLE OF scarr.     "it_scarr için gt_scarr tanımla
+DATA: gv_currcode TYPE s_currcode. "select options kullanmak için pb
+PARAMETERS: p_active TYPE char1.  "active için para.
+
+SELECT-OPTIONS: s_code FOR gv_currcode.   "selction screendeki veriler bu type da olsun
+
+START-OF-SELECTION.
+
+
+
+SELECT * FROM scarr INTO TABLE gt_scarr    "gt_scarr ı doldur
+               WHERE currcode IN s_code.  "kutuda verilende olsun
+
+"Ekranda pop up çıkmasın diye
+gs_controls-no_dialog = abap_true.       "çıktı aygıtı sorma
+gs_controls-preview = abap_true.         "ön gösterme çıksın
+gs_output_options-tddest = 'LP01'.       "çıktı aygıtı manuel gir
+
+CALL FUNCTION 'SSF_FUNCTION_MODULE_NAME'    "ara katmandır
+  EXPORTING
+    formname                 =  'Z_9125_SMRT_FRM_PRMT'   "smartform adı yaz
+ IMPORTING
+   FM_NAME                  = gv_fm_name  "Func. name i bana döner.
+ EXCEPTIONS
+   NO_FORM                  = 1
+   NO_FUNCTION_MODULE       = 2
+   OTHERS                   = 3
+          .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
+
+
+
+CALL FUNCTION gv_fm_name       "  Ana func.
+ EXPORTING
+   CONTROL_PARAMETERS         = gs_controls
+   OUTPUT_OPTIONS             =  gs_output_options
+   USER_SETTINGS              = ' '     "bizim yaptığımız değişiklikler active olsun diye boş bırak
+   IT_SCARR                   = gt_scarr    "oluşturduk içini doldurduk select
+   IV_ACTIVE                  = p_active
+ EXCEPTIONS
+   FORMATTING_ERROR           = 1
+   INTERNAL_ERROR             = 2
+   SEND_ERROR                 = 3
+   USER_CANCELED              = 4
+   OTHERS                     = 5
+          .
+IF sy-subrc <> 0.
+* Implement suitable error handling here
+ENDIF.
